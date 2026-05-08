@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
+import Ship from './Ship.js';
 
 const simplex = new SimplexNoise();
 
@@ -40,14 +41,13 @@ camera.position.z = 5; // so we set the camera position back a bit
 // let mixer;
 
 let xwing;
+
 const GLTFloader = new GLTFLoader();
 // // LOAD IN X-WING
 GLTFloader.load("x-wing-animated.glb", function ( gltf ) {
-  xwing = gltf.scene
-  xwing.position.z = 60;
-  xwing.position.y = -7;
-  scene.add( xwing );
-  console.log(xwing)
+  xwing = new Ship(THREE, gltf.scene, 0, -7, 60);
+  scene.add(xwing.body);
+  console.log(xwing);
 //     mixer = new THREE.AnimationMixer(gltf.scene);
     // if (gltf.animations.length > 0) {
     //     const action = mixer.clipAction(gltf.animations[0]);
@@ -215,60 +215,20 @@ const keys = {
   Space: false
 };
 
-window.addEventListener('keydown', (e) => {keys[e.code] = true; console.log(e.code)});
+window.addEventListener('keydown', (e) => keys[e.code] = true);
 window.addEventListener('keyup', (e) => keys[e.code] = false);
 
-const speed = 0.05;
-const offset = new THREE.Vector3(0, 0, -15); 
-
 function animate( time ) { // actually renders the scene
-  var direction = new THREE.Vector3();
+  
   // camera.getWorldDirection(direction); 
   // camera.position.add(direction); 
   // console.log(camera.position)
-  const xaxis = new THREE.Vector3(1, 0, 0).normalize(); 
-  const yaxis = new THREE.Vector3(0, 1, 0).normalize(); 
-  const zaxis = new THREE.Vector3(0, 0, 1).normalize(); 
 
   if (xwing) {
-    xwing.getWorldDirection(direction);
-    if (keys.Space) {
-      xwing.position.add(direction.multiplyScalar(15))
-      const idealPosition = offset.clone().applyQuaternion(xwing.quaternion).add(xwing.position);
-      camera.position.lerp(idealPosition, 0.3);
-      const xwingUp = new THREE.Vector3(0, 1, 0).applyQuaternion(xwing.quaternion);
-      camera.up.copy(xwingUp);
-      camera.lookAt(xwing.position);
-
-    } else {
-      xwing.position.add(direction.multiplyScalar(5))
-      const idealPosition = offset.clone().applyQuaternion(xwing.quaternion).add(xwing.position);
-      camera.position.lerp(idealPosition, 0.2);
-      const xwingUp = new THREE.Vector3(0, 1, 0).applyQuaternion(xwing.quaternion);
-      camera.up.copy(xwingUp);
-      camera.lookAt(xwing.position);
-    }
-    if (keys.KeyW)  {
-      xwing.rotateOnAxis(xaxis, speed);
-    }
-    if (keys.KeyS) {
-      xwing.rotateOnAxis(xaxis, -speed)
-    }
-    if (keys.KeyA){ 
-      xwing.rotateOnAxis(zaxis, -speed)
-    }
-    if (keys.KeyD) {
-      xwing.rotateOnAxis(zaxis, speed)
-    }
-    if (keys.KeyH) {
-      console.log("HEELo")
-      const geometry = new THREE.BoxGeometry( 50, 50, 50 );
-      const material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-      const cube = new THREE.Mesh( geometry, material );
-      cube.position.set(direction.multiplyScalar(5))
-      scene.add( cube );
-    }
-      render()
+    xwing.update(THREE, camera, keys);
+    render()
   }
 }
 renderer.setAnimationLoop( animate );
+
+

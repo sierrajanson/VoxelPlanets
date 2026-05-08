@@ -5,7 +5,6 @@ import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
 
 const simplex = new SimplexNoise();
 
-// todo list --> vary noise level
 // generate moons
 // generate rings
 // stars in background
@@ -14,22 +13,22 @@ const simplex = new SimplexNoise();
 // need a scene, camaera, and render... render the scene with camera
 const scene = new THREE.Scene();
 // FOV, aspect ratio,near, near far
-const camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 1000 );
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000 );
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight ); // set size at which to render app
 document.body.appendChild( renderer.domElement );
 
 const controls = new OrbitControls( camera, renderer.domElement );
-controls.target.set(0, 0, 0);
+controls.target.set(0, 0, 5);
 controls.update();
 
 const starsGeometry = new THREE.BufferGeometry();
 const starsMaterial = new THREE.PointsMaterial({color: 0x8886688});
 const starVertices = [];
-for (let i = 0; i < 10000; i++) {
-  const x = THREE.MathUtils.randFloatSpread(2000);
-  const y = THREE.MathUtils.randFloatSpread(2000);
-  const z = THREE.MathUtils.randFloatSpread(2000);
+for (let i = 0; i < 100000; i++) {
+  const x = THREE.MathUtils.randFloatSpread(20000);
+  const y = THREE.MathUtils.randFloatSpread(20000);
+  const z = THREE.MathUtils.randFloatSpread(20000);
   starVertices.push(x, y, z);
 }
 starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
@@ -40,19 +39,25 @@ controls.screenSpacePanning = true;
 camera.position.z = 5; // so we set the camera position back a bit
 // let mixer;
 
-// const GLTFloader = new GLTFLoader();
+let xwing;
+const GLTFloader = new GLTFLoader();
 // // LOAD IN X-WING
-// GLTFloader.load("x-wing-animated.glb", function ( gltf ) {
-//   scene.add( gltf.scene );
+GLTFloader.load("x-wing-animated.glb", function ( gltf ) {
+  xwing = gltf.scene
+  xwing.position.z = 60;
+  xwing.position.y = -7;
+  scene.add( xwing );
+  console.log(xwing)
 //     mixer = new THREE.AnimationMixer(gltf.scene);
-//     if (gltf.animations.length > 0) {
-//         const action = mixer.clipAction(gltf.animations[0]);
-//         action.play();
-//     }
-// }, undefined, function ( error ) {
-//   console.error( error )
-// } );
+    // if (gltf.animations.length > 0) {
+    //     const action = mixer.clipAction(gltf.animations[0]);
+    //     action.play();
+    // }
+}, undefined, function ( error ) {
+  console.error( error )
+} );
 
+const SCALE = 18;
 
 function makePlanetAtmosphere (origin, planetRadius, atmosphereColor) {
 
@@ -92,7 +97,7 @@ function makePlanetAtmosphere (origin, planetRadius, atmosphereColor) {
 // const atmosgeo = new THREE.SphereGeometry(r+3);
 // const atmosmat = new THREE.MeshStandardMaterial({ color: 0x0096FF, transparent: true, opacity:0.2, emissive: 0x0096FF});
 let waterMesh;
-function makePlanetBody(origin, radius, waterColor, grassColor, seed) {
+function makePlanetBody(origin, radius, waterColor, grassColor, seed=Math.random()*5000, waterPercentage=Math.random()) {
   /**
    * need to pass in origin point
    * grass color
@@ -100,24 +105,25 @@ function makePlanetBody(origin, radius, waterColor, grassColor, seed) {
    * planet radius
    * water amount
    */
-  const r = radius;
+  let r = radius;
   let {x,y,z}= origin;
   const ox = x;
   const oy = y;
   const oz = z;
-  const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const blockSize = 1;
+  const geometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
   const water = new THREE.MeshPhongMaterial({color: waterColor, opacity:0.8});
   const grass = new THREE.MeshPhongMaterial({color: grassColor})
 
   const waterVoxels = [];
   const grassVoxels = [];
 
-  for (let x = -r; x < r; x++) {
-    for (let y = -r; y < r; y++) {
-      for (let z = -r; z < r; z++) {
+  for (let x = -r; x < r; x+=blockSize) {
+    for (let y = -r; y < r; y+=blockSize) {
+      for (let z = -r; z < r; z+=blockSize) {
         const d = Math.sqrt(x**2+y**2+z**2)
         let mat;
-        if (Math.abs(d-r) <=1 && simplex.noise3d(x/r + seed, y/r, z/r) < 0.4) {
+        if (Math.abs(d-r) <=1 && simplex.noise3d(x/r + seed, y/r, z/r) < waterPercentage) {
           waterVoxels.push({x:x+ox,y:y+oy,z:z+oz})
         }
         else if (Math.abs(d-r) <= 1) {
@@ -126,6 +132,21 @@ function makePlanetBody(origin, radius, waterColor, grassColor, seed) {
       }
     }
   }
+// let geometry2 = new THREE.BoxGeometry(1, 1, 1);
+//   r = r + 10
+//   for (let x = -r; x < r; x++) {
+//     for (let y = -r; y < r; y++) {
+//       for (let z = -r; z < r; z++) {
+//         const d = Math.sqrt(x**2+y**2+z**2)
+//         if (Math.abs(d-r) <=2 && z >= r-5) {
+//           const mesh = new THREE.Mesh(geometry2,grass);
+//           mesh.position.set(x,y,z)
+//           // mesh.position.set(x+ox-r,y+oy-r,z+oz-r)
+//           scene.add(mesh);
+//         }
+//       }
+//     }
+//   }
   waterMesh = new THREE.InstancedMesh(geometry, water, waterVoxels.length)
   const grassMesh = new THREE.InstancedMesh(geometry, grass, grassVoxels.length)
 
@@ -136,6 +157,7 @@ function makePlanetBody(origin, radius, waterColor, grassColor, seed) {
     const {x,y,z} = waterVoxels[i];
     waterHolder.position.set(x,y,z)
     waterHolder.updateMatrix()
+    waterMesh.scale.set(SCALE,SCALE,SCALE)
     waterMesh.setMatrixAt(i, waterHolder.matrix)
   }
   scene.add(waterMesh)
@@ -144,6 +166,7 @@ function makePlanetBody(origin, radius, waterColor, grassColor, seed) {
     const {x,y,z} = grassVoxels[i];
     grassHolder.position.set(x,y,z)
     grassHolder.updateMatrix()
+    grassMesh.scale.set(SCALE,SCALE,SCALE)
     grassMesh.setMatrixAt(i, grassHolder.matrix)
   }
   scene.add(grassMesh)
@@ -160,41 +183,19 @@ function randomColorSampler(colorList) {
 }
 
 function makePlanet(radius, grassColor, waterColor,atmosColor) {
-  const range = 300
+  const range = 500
   const origin = {x:Math.random()*range-range/2,y:Math.random()*range-range/2,z:Math.random()*range-range/2}
-  if (Math.random() > 0.3) makePlanetAtmosphere(origin,radius+1+Math.random()*3, atmosColor)
-  makePlanetBody(origin, radius, grassColor, waterColor,Math.random()*5000)
+  // if (Math.random() > 0.3) makePlanetAtmosphere(origin,radius+1+Math.random()*3, atmosColor)
+  makePlanetBody(origin, radius, grassColor, waterColor)
 }
 
-for (let i = 0; i < 40; i++) {
+for (let i = 0; i < 100; i++) {
   const baseColor = Math.random()*360
   makePlanet(Math.random()*20+2, `hsl(${baseColor}, 100%, 50%)`, `hsl(${baseColor + Math.random()*40 - 40}, 100%, 50%)`, `hsl(${baseColor}, 80%, 70%)`)
 }
-// const origin2 = {x:40,y:40,z:-30}
-// makePlanetAtmosphere(origin2, radius/2+1, 0x8F0000)
-// makePlanetBody(origin2, radius/2, 'red', 'purple',8008)
-
-// const origin3 = {x:-30,y:-20,z:-60}
-// makePlanetAtmosphere(origin3, radius/2+1, 0xFFAA06)
-// makePlanetBody(origin3, radius/2, 'yellow', 'green',6969)
-
-// const origin4 = {x:-30,y:-20,z:-20}
-// makePlanetAtmosphere(origin4, radius/2+1, 0xFFAA06)
-// makePlanetBody(origin4, radius/2, '#EE22EE', '#FF00FF')
-
 
 const planetlighting = new THREE.AmbientLight( 0xFFFFFF,5); // soft white light
 scene.add( planetlighting );
-
-
-// const loader = new THREE.TextureLoader();
-// const texture = loader.load(
-// 'spacebackground.jpg',
-// () => {
-//   texture.mapping = THREE.EquirectangularReflectionMapping;
-//   texture.colorSpace = THREE.SRGBColorSpace;
-//   scene.background = texture;
-// });
 
 function render() {
   renderer.render( scene, camera );
@@ -205,7 +206,69 @@ render();
 controls.addEventListener('change', render);
 window.addEventListener('resize', render);
 
-function animate( time ) { // actually renders the scene
+const keys = {
+  KeyW: false,
+  KeyA: false,
+  KeyS: false,
+  KeyD: false,
+  KeyH: false,
+  Space: false
+};
 
+window.addEventListener('keydown', (e) => {keys[e.code] = true; console.log(e.code)});
+window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+const speed = 0.05;
+const offset = new THREE.Vector3(0, 0, -15); 
+
+function animate( time ) { // actually renders the scene
+  var direction = new THREE.Vector3();
+  // camera.getWorldDirection(direction); 
+  // camera.position.add(direction); 
+  // console.log(camera.position)
+  const xaxis = new THREE.Vector3(1, 0, 0).normalize(); 
+  const yaxis = new THREE.Vector3(0, 1, 0).normalize(); 
+  const zaxis = new THREE.Vector3(0, 0, 1).normalize(); 
+
+  if (xwing) {
+    xwing.getWorldDirection(direction);
+    if (keys.Space) {
+      xwing.position.add(direction.multiplyScalar(15))
+      const idealPosition = offset.clone().applyQuaternion(xwing.quaternion).add(xwing.position);
+      camera.position.lerp(idealPosition, 0.3);
+      const xwingUp = new THREE.Vector3(0, 1, 0).applyQuaternion(xwing.quaternion);
+      camera.up.copy(xwingUp);
+      camera.lookAt(xwing.position);
+
+    } else {
+      xwing.position.add(direction.multiplyScalar(5))
+      const idealPosition = offset.clone().applyQuaternion(xwing.quaternion).add(xwing.position);
+      camera.position.lerp(idealPosition, 0.2);
+      const xwingUp = new THREE.Vector3(0, 1, 0).applyQuaternion(xwing.quaternion);
+      camera.up.copy(xwingUp);
+      camera.lookAt(xwing.position);
+    }
+    if (keys.KeyW)  {
+      xwing.rotateOnAxis(xaxis, speed);
+    }
+    if (keys.KeyS) {
+      xwing.rotateOnAxis(xaxis, -speed)
+    }
+    if (keys.KeyA){ 
+      xwing.rotateOnAxis(zaxis, -speed)
+    }
+    if (keys.KeyD) {
+      xwing.rotateOnAxis(zaxis, speed)
+    }
+    if (keys.KeyH) {
+      console.log("HEELo")
+      const geometry = new THREE.BoxGeometry( 50, 50, 50 );
+      const material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+      const cube = new THREE.Mesh( geometry, material );
+      cube.position.set(direction.multiplyScalar(5))
+      scene.add( cube );
+    }
+      render()
+  }
 }
 renderer.setAnimationLoop( animate );

@@ -25,7 +25,6 @@ export default class Ship {
   }
 
   update(THREE, camera, keys) {
-    if (keys.Space) return;
     let direction = new THREE.Vector3();
     const xaxis = new THREE.Vector3(1, 0, 0).normalize(); 
     const yaxis = new THREE.Vector3(0, 1, 0).normalize(); 
@@ -90,13 +89,12 @@ export default class Ship {
     }
     this.body.rotateOnAxis(zaxis, this.rollSpeed);
 
-    if (keys.KeyH) {
-      console.log("HEELo")
-      const geometry = new THREE.BoxGeometry( 50, 50, 50 );
-      const material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-      const cube = new THREE.Mesh( geometry, material );
-      cube.position.set(direction.multiplyScalar(5))
-      scene.add( cube );
-    }
+    // if (keys.KeyH) {
+    //   const geometry = new THREE.BoxGeometry( 50, 50, 50 );
+    //   const material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+    //   const cube = new THREE.Mesh( geometry, material );
+    //   cube.position.set(direction.multiplyScalar(5))
+    //   scene.add( cube );
+    // }
   }
 }

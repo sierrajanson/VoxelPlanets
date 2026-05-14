@@ -46,12 +46,10 @@ export default class Planet {
         this.origin = origin
 
         this.seed = Math.random()*5000
-        this.waterPercentage = Math.random()
+        this.waterPercentage = Math.random()*0.8 + 0.2
         // this.atmosColor = atmosColor
         this.blockSize = 1;
         this.geometry = new THREE.BoxGeometry(this.blockSize, this.blockSize, this.blockSize);
-        console.log(grassColor)
-        console.log(waterColor)
         this.water = new THREE.MeshPhongMaterial({color: waterColor, opacity:0.8});
         this.grass = new THREE.MeshPhongMaterial({color: grassColor})
         this.planetlighting = new THREE.AmbientLight( 0xFFFFFF,3); // soft white light
@@ -107,7 +105,6 @@ export default class Planet {
             grassMesh.setMatrixAt(i, grassHolder.matrix)
         }
         scene.add(grassMesh)
-        scene.add( this.planetlighting );
     }
     buildRings(scene) {
         const innerR = this.radius + this.ringDistance

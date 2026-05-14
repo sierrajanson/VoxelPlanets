@@ -25,6 +25,7 @@ export default class Ship {
   }
 
   update(THREE, camera, keys) {
+    if (keys.Space) return;
     let direction = new THREE.Vector3();
     const xaxis = new THREE.Vector3(1, 0, 0).normalize(); 
     const yaxis = new THREE.Vector3(0, 1, 0).normalize(); 

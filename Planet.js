@@ -61,9 +61,6 @@ export default class Planet {
     buildPlanet(scene){
         let r = this.radius;
         let {ox,oy,oz}= this.origin;
-        // const ox = x;
-        // const oy = y;
-        // const oz = z;
 
         const waterVoxels = [];
         const grassVoxels = [];
@@ -112,9 +109,6 @@ export default class Planet {
         const ovalScale = this.ringScaler
         const ringVoxels = [];
         let {ox,oy,oz}= this.origin;
-        // const ox = x;
-        // const oy = y;
-        // const oz = z;
 
         for (let y = -outerR * ovalScale; y < outerR * ovalScale; y += this.blockSize) {
             for (let z = -outerR * ovalScale; z < outerR * ovalScale; z += this.blockSize) {

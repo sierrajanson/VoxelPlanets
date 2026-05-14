@@ -60,11 +60,21 @@ for (let i = 0; i < 100; i++) {
     {ox,oy,oz}, 
     radius, 
     `hsl(${baseColor}, 100%,  ${Math.random()*25+15}%)`,
-    `hsl(${baseColor}, 100%, ${Math.random()*25+15}%)`, 
-)
+    `hsl(${(baseColor+Math.random()*40+20)%360}, 100%, ${Math.random()*25+15}%)`, 
+  )
 
   p.buildPlanet(scene);
   if (Math.random() < 0.2) p.buildRings(scene)
+  // moon logic
+  if (Math.random() <0.05) {
+    // make moon placement & # more random
+    const moonpoffset=radius+3
+    const p = new Planet(
+      {ox:ox+moonpoffset,oy:oy+moonpoffset,oz:oz+moonpoffset}, 
+      radius/10, `hsl(${(baseColor+Math.random()*40+20)%360}, 100%, ${Math.random()*25+5}%)`,`hsl(${(baseColor+Math.random()*40+20)%360}, 100%, ${Math.random()*25+5}%)`
+    )
+    p.buildPlanet(scene)
+  }
 }
 function render() {
   renderer.render( scene, camera );
@@ -74,8 +84,6 @@ function render() {
 controls.addEventListener('change', render);
 window.addEventListener('resize', render);
 
-// generate moons
-// generate rings
 // generate clouds
 // generate different types of ground
 // suns + planets

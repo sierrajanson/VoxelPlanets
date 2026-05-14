@@ -52,12 +52,51 @@ export default class Planet {
         this.geometry = new THREE.BoxGeometry(this.blockSize, this.blockSize, this.blockSize);
         this.water = new THREE.MeshPhongMaterial({color: waterColor, opacity:0.8});
         this.grass = new THREE.MeshPhongMaterial({color: grassColor})
+        this.gas = new THREE.MeshPhongMaterial({color: grassColor, opacity: 0.6})
+        this.gas2 = new THREE.MeshPhongMaterial({color: waterColor, opacity: 0.8}) 
+
         this.planetlighting = new THREE.AmbientLight( 0xFFFFFF,3); // soft white light
 
         this.ringDistance = Math.floor(Math.random()*3 + 2)
         this.ringThickness = this.ringDistance + Math.floor(Math.random()*10 + 2)
         this.ringScaler = Math.random() + 1
     }
+    buildGasPlanet(scene, condition) {
+        let r = this.radius;
+        let {ox,oy,oz}= this.origin;
+        let gasVoxels = [];
+        let gasVoxels2 = [];
+
+        for (let x = -r; x < r; x+=this.blockSize) {
+            for (let y = -r; y < r; y+=this.blockSize) {
+                for (let z = -r; z < r; z+=this.blockSize) {
+                    const d = Math.sqrt(x**2+y**2+z**2)
+                    if (Math.abs(d-r) <=1 && condition(x)){
+                        gasVoxels.push({x:x+ox,y:y+oy,z:z+oz})
+                    } else if (Math.abs(d-r) <=1) {
+                        gasVoxels2.push({x:x+ox,y:y+oy,z:z+oz})
+                    }
+                }
+            }
+        }
+        
+        const gasMesh = new THREE.InstancedMesh(this.geometry, this.gas, gasVoxels.length)
+        const gas2Mesh = new THREE.InstancedMesh(this.geometry, this.gas2, gasVoxels2.length)
+        this.handleMesh(scene, gasMesh, gasVoxels)
+        this.handleMesh(scene, gas2Mesh, gasVoxels2)
+    }
+    handleMesh(scene, mesh, voxels) {
+        const holder = new THREE.Object3D();
+        for (let i = 0; i < voxels.length; i++) {
+            const {x,y,z} = voxels[i];
+            holder.position.set(x,y,z)
+            holder.updateMatrix()
+            mesh.scale.set(SCALE,SCALE,SCALE)
+            mesh.setMatrixAt(i, holder.matrix)
+        }
+        scene.add(mesh)
+    }
+
     buildPlanet(scene){
         let r = this.radius;
         let {ox,oy,oz}= this.origin;
@@ -82,26 +121,9 @@ export default class Planet {
         const waterMesh = new THREE.InstancedMesh(this.geometry, this.water, waterVoxels.length)
         const grassMesh = new THREE.InstancedMesh(this.geometry, this.grass, grassVoxels.length)
 
-        const waterHolder = new THREE.Object3D();
-        const grassHolder = new THREE.Object3D();
+        this.handleMesh(scene, waterMesh, waterVoxels)
+        this.handleMesh(scene, grassMesh, grassVoxels)
 
-        for (let i = 0; i < waterVoxels.length; i++) {
-            const {x,y,z} = waterVoxels[i];
-            waterHolder.position.set(x,y,z)
-            waterHolder.updateMatrix()
-            waterMesh.scale.set(SCALE,SCALE,SCALE)
-            waterMesh.setMatrixAt(i, waterHolder.matrix)
-        }
-        scene.add(waterMesh)
-
-        for (let i = 0; i < grassVoxels.length; i++) {
-            const {x,y,z} = grassVoxels[i];
-            grassHolder.position.set(x,y,z)
-            grassHolder.updateMatrix()
-            grassMesh.scale.set(SCALE,SCALE,SCALE)
-            grassMesh.setMatrixAt(i, grassHolder.matrix)
-        }
-        scene.add(grassMesh)
     }
     buildRings(scene) {
         const innerR = this.radius + this.ringDistance

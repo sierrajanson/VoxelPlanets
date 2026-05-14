@@ -63,8 +63,21 @@ for (let i = 0; i < 100; i++) {
     `hsl(${(baseColor+Math.random()*40+20)%360}, 100%, ${Math.random()*25+15}%)`, 
   )
 
-  p.buildPlanet(scene);
-  if (Math.random() < 0.2) p.buildRings(scene)
+  function halfCondition(x) {
+    return x < 0
+  }
+  function randomCondition(x) {
+    return Math.random() < 0.5
+  }
+
+  if (Math.random() < 0.2) { // half & half with rings
+    p.buildGasPlanet(scene, halfCondition);
+    p.buildRings(scene)
+  } else if (Math.random() < 0.01) { // random color planet
+    p.buildGasPlanet(scene, randomCondition)
+  } else {
+    p.buildPlanet(scene)
+  }
   // moon logic
   if (Math.random() <0.05) {
     // make moon placement & # more random
@@ -85,6 +98,9 @@ controls.addEventListener('change', render);
 window.addEventListener('resize', render);
 
 // generate clouds
+// add gravity
+// add black holes
+// add cute slow music
 // generate different types of ground
 // suns + planets
 
